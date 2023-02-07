@@ -1,0 +1,93 @@
+_schema-version: "3.2"
+ID: FioriApp
+description: Fiori elements app
+version: 0.0.1
+modules:
+- name: FioriApp-dest-content
+  type: com.sap.application.content
+  requires:
+  - name: FioriApp-destination-service
+    parameters:
+      content-target: true
+  - name: FioriApp-repo-host
+    parameters:
+      service-key:
+        name: FioriApp-repo-host-key
+  - name: FioriApp-uaa
+    parameters:
+      service-key:
+        name: FioriApp-uaa-key
+  parameters:
+    content:
+      instance:
+        destinations:
+        - Name: FioriApp_repo_host
+          ServiceInstanceName: FioriApp-html5-srv
+          ServiceKeyName: FioriApp-repo-host-key
+          sap.cloud.service: FioriApp
+        - Authentication: OAuth2UserTokenExchange
+          Name: FioriApp_uaa
+          ServiceInstanceName: FioriApp-xsuaa-srv
+          ServiceKeyName: FioriApp-uaa-key
+          sap.cloud.service: FioriApp
+        existing_destinations_policy: update
+  build-parameters:
+    no-source: true
+- name: FioriApp-app-content
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: FioriApp-repo-host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - nsbusinesspartners.zip
+      name: nsbusinesspartners
+      target-path: resources/
+- name: nsbusinesspartners
+  type: html5
+  path: businesspartners
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: FioriApp-uaa
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: FioriApp-xsuaa-srv
+    service-plan: application
+- name: FioriApp-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: true
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: FioriApp-destination-service
+    service-plan: lite
+- name: FioriApp-repo-host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-name: FioriApp-html5-srv
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
