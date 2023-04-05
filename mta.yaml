@@ -1,6 +1,6 @@
 _schema-version: "3.2"
 ID: FioriApp
-description: Fiori elements app
+description: Fiori elements app change to be checks
 version: 0.0.1
 modules:
 - name: FioriApp-dest-content
